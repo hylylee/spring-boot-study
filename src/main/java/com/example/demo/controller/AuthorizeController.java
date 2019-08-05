@@ -2,6 +2,8 @@ package com.example.demo.controller;
 
 import com.example.demo.dto.AccessTokenDTO;
 import com.example.demo.dto.GithubUser;
+import com.example.demo.mapper.UserMapper;
+import com.example.demo.model.User;
 import com.example.demo.provider.GithubProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -10,12 +12,16 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.UUID;
 
 @Controller
 public class AuthorizeController {
 
     @Autowired
     GithubProvider provider;
+
+    @Autowired
+    UserMapper userMapper;
 
     @Value("${github.client.id}")
     String clientId;
@@ -37,9 +43,16 @@ public class AuthorizeController {
         accessTokenDTO.setRedirect_uri(redirectUri);
         accessTokenDTO.setState(state);
         String accessToken = provider.getAccessToken(accessTokenDTO);
-        GithubUser user = provider.getUser(accessToken);
-        if (user != null) {
-            request.getSession().setAttribute("user", user);
+        GithubUser githubUser = provider.getUser(accessToken);
+        if (githubUser != null) {
+            User user = new User();
+            user.setName(githubUser.getName());
+            user.setAccountId(githubUser.getId());
+            user.setToken(UUID.randomUUID().toString());
+            user.setGmtCreate(System.currentTimeMillis());
+            user.setGmtModified(user.getGmtCreate());
+            userMapper.insert(user);
+            request.getSession().setAttribute("user", githubUser);
             return "redirect:/";
         } else {
             return "redirect:/";
