@@ -1,11 +1,20 @@
 package com.example.demo.model;
 
 public class User {
+    private Integer id;
     private String accountId;
     private String name;
     private String token;
     private long gmtCreate;
     private long gmtModified;
+
+    public Integer getId() {
+        return id;
+    }
+
+    public void setId(Integer id) {
+        this.id = id;
+    }
 
     public String getAccountId() {
         return accountId;
