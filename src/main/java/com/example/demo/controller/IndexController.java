@@ -1,5 +1,6 @@
 package com.example.demo.controller;
 
+import com.example.demo.dto.PaginationDTO;
 import com.example.demo.dto.QuestionDTO;
 import com.example.demo.mapper.QuestionMapper;
 import com.example.demo.mapper.UserMapper;
@@ -28,7 +29,10 @@ public class IndexController {
     QuestionService questionService;
 
     @GetMapping("/")
-    public String hello(HttpServletRequest request, Model model) {
+    public String hello(HttpServletRequest request,
+                        Model model,
+                        @RequestParam(name = "page", defaultValue = "1") Integer page,
+                        @RequestParam(name = "size", defaultValue = "2") Integer size) {
 
         Cookie[] cookies = request.getCookies();
         if (cookies == null || cookies.length == 0) {
@@ -43,8 +47,8 @@ public class IndexController {
                 break;
             }
         }
-        List<QuestionDTO> questionList = questionService.list();
-        model.addAttribute("questionList", questionList);
+        PaginationDTO pagination = questionService.list(page, size);
+        model.addAttribute("pagination", pagination);
         return "index";
     }
 
