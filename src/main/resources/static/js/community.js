@@ -5,7 +5,12 @@ function post() {
     var security_value = $($('meta[name="_csrf_value"]')[0]).attr('content')
     var headers = {};
     headers[security_key] = security_value;
-    console.log(headers)
+
+    if (!content) {
+        alert("不能回复空内容!");
+        return;
+    }
+
     $.ajax({
         type: 'post',
         url: '/comment',
@@ -18,7 +23,7 @@ function post() {
         }),
         success: function(response) {
             if (response.code == 200) {
-                $('#comment_section').hide();
+                location.reload();
             } else {
                 if (response.code == 2003) {
                     var isAccepted = confirm(response.message)
