@@ -14,9 +14,13 @@ import org.apache.ibatis.session.RowBounds;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.StringJoiner;
+import java.util.stream.Collectors;
 
 @Service
 public class QuestionService {
@@ -45,8 +49,9 @@ public class QuestionService {
         paginationDTO.setPage(page);
 
         Integer offset = size * (page - 1);
-        List<Question> questionList = questionMapper.selectByExampleWithRowbounds(
-                new QuestionExample(),
+        QuestionExample questionExample = new QuestionExample();
+        questionExample.setOrderByClause("gmt_create desc");
+        List<Question> questionList = questionMapper.selectByExampleWithRowbounds(questionExample,
                 new RowBounds(offset, size));
         List<QuestionDTO> questionDTOList = new ArrayList<>();
 
@@ -134,5 +139,28 @@ public class QuestionService {
         question.setId(id);
         question.setViewCount(1);
         questionExtMapper.incView(question);
+    }
+
+    public List<QuestionDTO> selectRelated(QuestionDTO questionDTO) {
+        if (StringUtils.isEmpty(questionDTO.getTag())) {
+            return new ArrayList<>();
+        }
+        String[] tags = StringUtils.split(questionDTO.getTag(), ",");
+        if (tags == null) {
+            tags = new String[]{questionDTO.getTag()};
+        }
+        String regexTag = Arrays.stream(tags)
+                .collect(Collectors.joining("|"));
+        Question question = new Question();
+        question.setId(questionDTO.getId());
+        question.setTag(regexTag);
+        List<Question> relatedQuestions = questionExtMapper.selectRelated(question);
+        return relatedQuestions.stream()
+                .map(q -> {
+                    QuestionDTO dto = new QuestionDTO();
+                    BeanUtils.copyProperties(q, dto);
+                    return dto;
+                })
+                .collect(Collectors.toList());
     }
 }
